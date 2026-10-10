@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Real-Time Kanban | Next-Gen Task Board{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        darkbg: '#0F172A',
+                        darkcard: '#1E293B',
+                        darkpanel: 'rgba(30, 41, 59, 0.7)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- SocketIO & SortableJS -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo & Brand -->
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('index_page') }}" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+                        <i class="fa-solid fa-kanban text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="font-heading font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
+                            TaskPulse
+                        </span>
+                        <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 ml-2 border border-indigo-500/30">
+                            Real-Time
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Header Right / User Menu -->
+            <div class="flex items-center space-x-4">
+                {% if session.get('user_id') %}
+                <!-- Quick Demo Switcher dropdown -->
+                <div class="hidden sm:flex items-center space-x-2 bg-slate-800/80 rounded-lg p-1 border border-slate-700/60">
+                    <span class="text-xs text-slate-400 font-medium px-2">Switch Demo User:</span>
+                    <button onclick="switchGuest('Alice')" class="px-2 py-1 text-xs rounded font-medium bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 transition">Alice</button>
+                    <button onclick="switchGuest('Bob')" class="px-2 py-1 text-xs rounded font-medium bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition">Bob</button>
+                    <button onclick="switchGuest('Charlie')" class="px-2 py-1 text-xs rounded font-medium bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition">Charlie</button>
+                </div>
+
+                <!-- Current User Avatar -->
+                <div class="flex items-center space-x-3 border-l border-slate-800 pl-4">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white shadow-md border-2 border-indigo-500/40" style="background-color: {{ user.avatar_color if user else '#3B82F6' }}">
+                        {{ user.username[0].upper() if user else 'U' }}
+                    </div>
+                    <div class="hidden md:block text-left">
+                        <div class="text-sm font-semibold text-slate-200">{{ user.username if user else 'User' }}</div>
+                        <div class="text-xs text-slate-400">{{ user.email if user else '' }}</div>
+                    </div>
+                    <button onclick="logout()" title="Logout" class="p-2 text-slate-400 hover:text-rose-400 transition hover:bg-slate-800 rounded-lg">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+                {% else %}
+                <a href="{{ url_for('login_page') }}" class="text-sm font-medium text-slate-300 hover:text-white transition">Sign In</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Base JS -->
+    <script>
+        async function logout() {
+            try {
+                const res = await fetch('/api/auth/logout', { method: 'POST' });
+                if (res.ok) window.location.href = '/login';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function switchGuest(name) {
+            try {
+                const res = await fetch('/api/auth/quick-guest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guest: name })
+                });
+                if (res.ok) {
+                    showToast(`Switched user to ${name}`, 'success');
+                    setTimeout(() => window.location.reload(), 300);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast-item pointer-events-auto flex items-center space-x-3 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md border text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 ${
+                type === 'success' ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-200' :
+                type === 'error' ? 'bg-rose-950/80 border-rose-500/40 text-rose-200' :
+                'bg-slate-900/90 border-slate-700/60 text-slate-200'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' :
+                         type === 'error' ? 'fa-triangle-exclamation text-rose-400' :
+                         'fa-circle-info text-indigo-400';
+
+            toast.innerHTML = `<i class="fa-solid ${icon} text-lg"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,111 @@
+/* Glassmorphism & Custom Polish */
+.glass-panel {
+    background: rgba(30, 41, 59, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px 0 rgba(99, 102, 241, 0.15);
+}
+
+/* SortableJS Drag & Drop Styles */
+.sortable-ghost {
+    opacity: 0.35 !important;
+    background: rgba(99, 102, 241, 0.15) !important;
+    border: 2px dashed rgba(99, 102, 241, 0.6) !important;
+    transform: scale(0.98);
+}
+
+.sortable-chosen {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(168, 85, 247, 0.6);
+}
+
+.sortable-drag {
+    opacity: 0.95 !important;
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.3) !important;
+    transform: rotate(2deg) scale(1.02) !important;
+    cursor: grabbing !important;
+}
+
+/* Custom Scrollbars for Kanban Columns */
+.kanban-tasks::-webkit-scrollbar {
+    width: 6px;
+}
+
+.kanban-tasks::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 8px;
+}
+
+.kanban-tasks::-webkit-scrollbar-thumb {
+    background: rgba(51, 65, 85, 0.8);
+    border-radius: 8px;
+}
+
+.kanban-tasks::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
+}
+
+/* Pulse animation for live online presence indicator */
+@keyframes pulse-ring {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 0.4; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.online-pulse {
+    animation: pulse-ring 2s infinite ease-in-out;
+}
+
+/* Card entry animation */
+@keyframes card-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-card-in {
+    animation: card-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Priority Badge styles */
+.priority-low {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.priority-medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.priority-high {
+    background: rgba(249, 115, 22, 0.15);
+    color: #FB923C;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.priority-urgent {
+    background: rgba(239, 68, 68, 0.2);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+}

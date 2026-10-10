@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Real-Time Collaborative Boards{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <!-- Hero Header -->
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-slate-900/60 p-6 md:p-8 rounded-2xl border border-indigo-500/20 backdrop-blur-md relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 max-w-2xl">
+            <h1 class="text-2xl md:text-3xl font-heading font-extrabold text-white tracking-tight mb-2">
+                Welcome back, <span class="bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">{{ user.username }}</span>! 👋
+            </h1>
+            <p class="text-slate-300 text-sm md:text-base leading-relaxed">
+                Collaborate in real-time with instant drag-and-drop task sync, online presence avatars, and shareable workspace links.
+            </p>
+        </div>
+        <div class="relative z-10 flex flex-wrap items-center gap-3">
+            <a href="/board/demo-board-1234" class="px-5 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-pink-500/25 transition flex items-center space-x-2 text-sm">
+                <i class="fa-solid fa-rocket"></i>
+                <span>Open Launch Board</span>
+            </a>
+            <button onclick="openCreateBoardModal()" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 transition flex items-center space-x-2 text-sm border border-indigo-400/30">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create New Board</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Tip Banner for Testing Real-Time Sync -->
+    <div class="mb-8 p-4 rounded-xl bg-indigo-950/60 border border-indigo-500/30 flex items-start space-x-3 text-xs md:text-sm text-indigo-200">
+        <div class="p-2 rounded-lg bg-indigo-500/20 text-indigo-300 shrink-0">
+            <i class="fa-solid fa-bolt text-base"></i>
+        </div>
+        <div>
+            <span class="font-bold text-white">How to test Real-Time Sync:</span>
+            Open the demo board in two different browser windows or tabs. Switch one tab to <strong>"Bob"</strong> or <strong>"Charlie"</strong> using the top user switcher. Drag any card in Tab A and watch Tab B update instantly with zero delay!
+        </div>
+    </div>
+
+    <!-- Board Grid Section -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-heading font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-columns text-indigo-400"></i>
+                <span>Your Collaborative Workspaces</span>
+            </h2>
+            <span id="board-count-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">Loading...</span>
+        </div>
+
+        <!-- Boards Container Grid -->
+        <div id="boards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Skeleton Loader -->
+            <div class="glass-panel rounded-2xl p-6 h-48 animate-pulse border border-slate-800"></div>
+            <div class="glass-panel rounded-2xl p-6 h-48 animate-pulse border border-slate-800"></div>
+            <div class="glass-panel rounded-2xl p-6 h-48 animate-pulse border border-slate-800"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Board Modal -->
+<div id="create-board-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-card-in">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <h3 class="text-lg font-heading font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-folder-plus text-indigo-400"></i>
+                <span>Create Workspace Board</span>
+            </h3>
+            <button onclick="closeCreateBoardModal()" class="text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="create-board-form" onsubmit="submitCreateBoard(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Board Title *</label>
+                <input type="text" id="board-title-input" required placeholder="e.g., Sprint 42 Kanban, Q3 Marketing" 
+                    class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1.5">Description (Optional)</label>
+                <textarea id="board-desc-input" rows="3" placeholder="Goals, team notes, or scope..."
+                    class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-800">
+                <button type="button" onclick="closeCreateBoardModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">Create Board</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', fetchBoards);
+
+    async function fetchBoards() {
+        try {
+            const res = await fetch('/api/boards');
+            if (!res.ok) throw new Error('Failed to fetch boards');
+            const boards = await res.json();
+            renderBoards(boards);
+        } catch (e) {
+            console.error(e);
+            showToast('Failed to load boards', 'error');
+        }
+    }
+
+    function renderBoards(boards) {
+        const container = document.getElementById('boards-grid');
+        const badge = document.getElementById('board-count-badge');
+        badge.innerText = `${boards.length} Board${boards.length === 1 ? '' : 's'}`;
+
+        if (boards.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full glass-panel rounded-2xl p-12 text-center border border-slate-800/80">
+                    <div class="w-16 h-16 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-1">No Boards Found</h3>
+                    <p class="text-sm text-slate-400 mb-6 max-w-sm mx-auto">Create your first real-time Kanban board or launch the demo workspace!</p>
+                    <button onclick="openCreateBoardModal()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition">
+                        Create Workspace
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = boards.map(b => `
+            <div class="glass-panel rounded-2xl p-6 border border-slate-800/80 hover:border-indigo-500/40 transition group relative flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                            Workspace
+                        </span>
+                        <div class="flex items-center space-x-1 text-slate-400 text-xs">
+                            <i class="fa-solid fa-users text-slate-500"></i>
+                            <span>${b.member_count} member${b.member_count === 1 ? '' : 's'}</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-heading font-bold text-white group-hover:text-indigo-300 transition mb-2">
+                        ${escapeHtml(b.title)}
+                    </h3>
+                    <p class="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                        ${b.description ? escapeHtml(b.description) : 'No description provided.'}
+                    </p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/60 flex items-center justify-between mt-4">
+                    <div class="flex items-center space-x-2 text-xs text-slate-400">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] text-white" style="background-color: ${b.owner.avatar_color}">
+                            ${b.owner.username[0].upper ? b.owner.username[0].toUpperCase() : 'U'}
+                        </div>
+                        <span class="truncate max-w-[100px]">${escapeHtml(b.owner.username)}</span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="copyInviteLink('${b.uuid}')" title="Copy Invite Link" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs">
+                            <i class="fa-solid fa-link"></i>
+                        </button>
+                        <a href="/board/${b.uuid}" class="px-3.5 py-1.5 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-white font-medium text-xs transition flex items-center space-x-1">
+                            <span>Open</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openCreateBoardModal() {
+        document.getElementById('create-board-modal').classList.remove('hidden');
+    }
+
+    function closeCreateBoardModal() {
+        document.getElementById('create-board-modal').classList.add('hidden');
+        document.getElementById('create-board-form').reset();
+    }
+
+    async function submitCreateBoard(e) {
+        e.preventDefault();
+        const title = document.getElementById('board-title-input').value;
+        const description = document.getElementById('board-desc-input').value;
+
+        try {
+            const res = await fetch('/api/boards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed to create board');
+            }
+
+            const board = await res.json();
+            showToast('Board created successfully!', 'success');
+            closeCreateBoardModal();
+            fetchBoards();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    function copyInviteLink(uuid) {
+        const link = `${window.location.origin}/board/${uuid}`;
+        navigator.clipboard.writeText(link);
+        showToast('Invite link copied to clipboard!', 'success');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+</script>
+{% endblock %}

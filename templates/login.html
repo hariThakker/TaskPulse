@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In / Register | TaskPulse Real-Time Kanban{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex items-center justify-center p-4 relative">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/30 via-slate-950 to-slate-950 pointer-events-none"></div>
+
+    <div class="max-w-md w-full glass-panel rounded-3xl p-8 border border-slate-800 shadow-2xl relative z-10 space-y-6 animate-card-in">
+        <!-- Logo & Header -->
+        <div class="text-center space-y-2">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-pink-500 flex items-center justify-center shadow-xl shadow-indigo-500/25 mx-auto mb-3">
+                <i class="fa-solid fa-kanban text-white text-2xl"></i>
+            </div>
+            <h2 id="auth-title" class="text-2xl font-heading font-extrabold text-white">Sign In to TaskPulse</h2>
+            <p id="auth-subtitle" class="text-xs text-slate-400">Collaborative real-time Kanban boards with instant sync</p>
+        </div>
+
+        <!-- 1-Click Quick Demo Login Box -->
+        <div class="p-4 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 space-y-2 text-center">
+            <div class="text-xs font-semibold uppercase tracking-wider text-indigo-300">⚡ 1-Click Demo Login (Recruiter / Test Mode)</div>
+            <div class="grid grid-cols-3 gap-2 pt-1">
+                <button onclick="quickGuest('Alice')" class="px-3 py-2 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/30 text-xs font-semibold transition">
+                    Alice <span class="block text-[9px] font-normal text-pink-400">Lead</span>
+                </button>
+                <button onclick="quickGuest('Bob')" class="px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition">
+                    Bob <span class="block text-[9px] font-normal text-emerald-400">Dev</span>
+                </button>
+                <button onclick="quickGuest('Charlie')" class="px-3 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs font-semibold transition">
+                    Charlie <span class="block text-[9px] font-normal text-purple-400">Designer</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-800"></div>
+            <span class="flex-shrink mx-4 text-xs font-semibold uppercase text-slate-500">Or use email</span>
+            <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <!-- Credentials Form -->
+        <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4">
+            <div id="email-group" class="hidden">
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Email Address</label>
+                <input type="email" id="email-input" placeholder="user@example.com"
+                    class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Username or Email</label>
+                <input type="text" id="username-input" required placeholder="e.g. Alice or alice@example.com"
+                    class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Password</label>
+                <input type="password" id="password-input" required placeholder="••••••••"
+                    class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-indigo-600/30 transition text-sm">
+                Sign In
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-slate-400 pt-2">
+            <span id="toggle-text">Don't have an account?</span>
+            <button onclick="toggleAuthMode()" id="toggle-btn" class="text-indigo-400 hover:underline font-semibold ml-1">Create Account</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let isRegister = false;
+
+    function toggleAuthMode() {
+        isRegister = !isRegister;
+        const title = document.getElementById('auth-title');
+        const subtitle = document.getElementById('auth-subtitle');
+        const emailGroup = document.getElementById('email-group');
+        const submitBtn = document.getElementById('submit-btn');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleBtn = document.getElementById('toggle-btn');
+
+        if (isRegister) {
+            title.innerText = 'Create TaskPulse Account';
+            subtitle.innerText = 'Join collaborative workspaces instantly';
+            emailGroup.classList.remove('hidden');
+            submitBtn.innerText = 'Register & Start';
+            toggleText.innerText = 'Already have an account?';
+            toggleBtn.innerText = 'Sign In';
+        } else {
+            title.innerText = 'Sign In to TaskPulse';
+            subtitle.innerText = 'Collaborative real-time Kanban boards with instant sync';
+            emailGroup.classList.add('hidden');
+            submitBtn.innerText = 'Sign In';
+            toggleText.innerText = "Don't have an account?";
+            toggleBtn.innerText = 'Create Account';
+        }
+    }
+
+    async function handleAuth(e) {
+        e.preventDefault();
+        const username = document.getElementById('username-input').value;
+        const password = document.getElementById('password-input').value;
+        const email = document.getElementById('email-input').value;
+
+        const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+        const body = isRegister ? { username, email, password } : { username, password };
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+            showToast(isRegister ? 'Account created!' : 'Welcome back!', 'success');
+            setTimeout(() => window.location.href = '/', 300);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    }
+
+    async function quickGuest(name) {
+        try {
+            const res = await fetch('/api/auth/quick-guest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guest: name })
+            });
+            if (res.ok) {
+                showToast(`Logged in as ${name}`, 'success');
+                setTimeout(() => window.location.href = '/', 300);
+            }
+        } catch (e) {
+            showToast('Failed to quick login', 'error');
+        }
+    }
+</script>
+{% endblock %}
